@@ -13,12 +13,12 @@ const db = mysql.createConnection({
     host: 'c237-hungteng-mysql.mysql.database.azure.com',
     user: 'c237_008',
     password: 'c237008@2026!',
-    database: 'c237_008_team3'
-});
-
-ssl: {
+    database: 'c237_008_team3',
+    ssl: {
     rejectUnauthorized: true
 }
+});
+
 
 db.connect((err) => {
     if (err) {
