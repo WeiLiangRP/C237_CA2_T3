@@ -16,6 +16,10 @@ const db = mysql.createConnection({
     database: 'c237_008_team3'
 });
 
+ssl: {
+    rejectUnauthorized: true
+}
+
 db.connect((err) => {
     if (err) {
         throw err;
