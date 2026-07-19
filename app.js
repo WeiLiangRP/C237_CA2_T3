@@ -76,8 +76,8 @@ app.get('/register', (req, res) => {
 
 //******** TODO: Create a middleware function validateRegistration ********//
 const validateRegistration = (req, res, next) => {
-    const { username, email, password, address, contact } = req.body;
-    if (!username || !email || !password || !address || !contact) {
+    const { username, email, password, contact, role } = req.body;
+    if (!username || !email || !password ||!contact || !role) {
     return res.send('All fields are required.');
     }
     if (password.length < 6) {
@@ -93,12 +93,14 @@ const validateRegistration = (req, res, next) => {
 //******** TODO: Integrate validateRegistration into the register route. ********//
 app.post('/register', validateRegistration, (req, res) => {
     //******** TODO: Update register route to include role. ********//
-    const { username, email, password, address, contact, role } = req.body;
+    const { username, email, password, contact, role } = req.body;
 
-    const sql = 'INSERT INTO users (username, email, password, address, contact, role) VALUES (?, ?, SHA1(?), ?, ?, ?)';
-    db.query(sql, [username, email, password, address, contact, role], (err, result) => {
+    const sql = 'INSERT INTO users (username, email, password, contact, role) VALUES (?, ?, SHA1(?), ?, ?)';
+    db.query(sql, [username, email, password, contact, role], (err, result) => {
         if (err) {
-            throw err;
+            console.error("Registration error:", err);
+            req.flash('error', 'An error occurred during registration. Please try again.');
+            return res.redirect('/register');
         }
         console.log(result);
         req.flash('success', 'Registration successful! Please log in.');
@@ -111,6 +113,7 @@ app.get('/login', (req, res) => {
 res.render('login', { 
 //retrieve success and error messages from the flash middleware and 
 //pass them to the login view for display.
+user: req.session.user || null,
 messages: req.flash('success'), 
 errors: req.flash('error') 
 });
@@ -128,7 +131,9 @@ app.post('/login', (req, res) => {
   const sql = 'SELECT * FROM users WHERE email = ? AND password = SHA1(?)';
   db.query(sql, [email, password], (err, results) => {
     if (err) {
-      throw err;
+      console.error("Login error:", err);
+      req.flash('error', 'An error occurred during login. Please try again.');
+      return res.redirect('/login');
     }
     if (results.length > 0) {
       // Successful login
@@ -164,3 +169,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server started on port ${PORT}`);
 });
+
+

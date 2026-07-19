@@ -1,0 +1,22 @@
+<nav style="display: flex; justify-content: space-between; padding: 15px; background-color: #333; color: white;">
+  <div>
+    <!-- The button to go straight to home -->
+    <a href="/" style="color: white; text-decoration: none; font-weight: bold; font-size: 1.2rem;">
+      🏫 Campus Space Booking
+    </a>
+  </div>
+  
+  <div>
+    <% if (locals.user) { %>
+      <span style="margin-right: 15px;">Hello, <%= user.username %> (<%= user.role %>)</span>
+      <a href="/dashboard" style="color: white; margin-right: 15px; text-decoration: none;">Dashboard</a>
+      <a href="/logout" style="color: #ff4d4d; text-decoration: none; font-weight: bold;">Logout</a>
+    <% } else { %>
+      <!-- Only show login/register if the user is NOT on the homepage -->
+      <% if (locals.currentUrl && currentUrl !== '/') { %>
+        <a href="/login" style="color: white; margin-right: 15px; text-decoration: none;">Login</a>
+        <a href="/register" style="color: white; text-decoration: none; background-color: #007bff; padding: 5px 10px; border-radius: 4px;">Register</a>
+      <% } %>
+    <% } %>
+  </div>
+</nav>
