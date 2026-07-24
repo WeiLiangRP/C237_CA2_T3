@@ -49,7 +49,7 @@ const db = mysql.createConnection({
     password: 'c237008@2026!',
     database: 'c237_008_t3_ca2',
     ssl: {
-    rejectUnauthorized: false
+    rejectUnauthorized: true
 }
 });
 
