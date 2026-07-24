@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title><%= room.room_name %> - BookWise</title>
+    <%- include('partials/head-assets') %>
+</head>
+<body>
+    <%- include('partials/navbar') %>
+    <div class="container" style="max-width: 700px;">
+        <a href="/rooms" class="btn btn-link px-0 mt-4">&larr; Back to rooms</a>
+        <img src="<%= room.image_url || '/images/placeholder.svg' %>" alt="<%= room.room_name %>" class="thumb-lg"
+            onerror="this.onerror=null;this.src='/images/placeholder.svg';">
+        <h1 class="mb-1"><%= room.room_name %></h1>
+        <% const category = room.category; %>
+        <%- include('partials/category-badge', { category }) %>
+        <p class="text-muted mt-2"><%= room.location %> &middot; Capacity: <%= room.capacity %></p>
+        <p><%= room.description %></p>
+
+        <% if (room.status === 'maintenance') { %>
+            <div class="alert alert-warning">🛠️ <strong>Under Maintenance</strong> — this room is temporarily unavailable and cannot be booked right now. Please check back later.</div>
+        <% } %>
+
+        <% if (errors && errors.length > 0) { %>
+            <div class="alert alert-danger">
+                <% errors.forEach(function(error) { %><p class="mb-0"><%= error %></p><% }); %>
+            </div>
+        <% } %>
+
+        <% if (bookedSlots && bookedSlots.length > 0) { %>
+            <div class="card mt-4">
+                <div class="card-header">📅 Already Booked</div>
+                <ul class="list-group list-group-flush">
+                    <% bookedSlots.forEach(function(s) { %>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><%= new Date(s.start_time).toLocaleString() %> &ndash; <%= new Date(s.end_time).toLocaleString() %></span>
+                            <span class="badge bg-secondary">Booked</span>
+                        </li>
+                    <% }); %>
+                </ul>
+                <div class="card-footer small text-muted">These time slots are taken — pick a time outside of them.</div>
+            </div>
+        <% } %>
+
+        <% if (room.status === 'maintenance') { %>
+            <div class="card mt-4">
+                <div class="card-body text-center text-muted">
+                    Booking is disabled while this room is under maintenance.
+                </div>
+            </div>
+        <% } else { %>
+        <div class="card mt-4">
+            <div class="card-header">Book This Room</div>
+            <div class="card-body">
+                <form action="/bookings" method="POST">
+                    <input type="hidden" name="room_id" value="<%= room.room_id %>">
+
+                    <div class="mb-3">
+                        <label class="form-label">Purpose</label>
+                        <input type="text" name="purpose" class="form-control" placeholder="e.g. Group project discussion"
+                            value="<%= (prefill && prefill.purpose) ? prefill.purpose : '' %>">
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Start Time</label>
+                            <input type="datetime-local" id="start_time" name="start_time" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">End Time</label>
+                            <input type="datetime-local" id="end_time" name="end_time" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Equipment (optional)</label>
+                        <div class="form-text mt-0 mb-2">Showing <%= CATEGORIES[room.category].label %> equipment only.</div>
+                        <% if (equipmentList.length === 0) { %>
+                            <p class="small text-muted">No <%= CATEGORIES[room.category].label %> equipment currently available.</p>
+                        <% } %>
+                        <% equipmentList.forEach(function(eq) { %>
+                            <div class="form-check d-flex align-items-center gap-2 mb-2">
+                                <input class="form-check-input mt-0" type="checkbox" name="equipment_ids" value="<%= eq.equipment_id %>" id="eq<%= eq.equipment_id %>"
+                                    <%= eq.status !== 'active' ? 'disabled' : '' %>
+                                    <%= (prefill && prefill.equipment_ids && eq.status === 'active' && prefill.equipment_ids.includes(eq.equipment_id)) ? 'checked' : '' %>>
+                                <img src="<%= eq.image_url || '/images/placeholder.svg' %>" alt="<%= eq.equipment_name %>" class="thumb-xs"
+                                    onerror="this.onerror=null;this.src='/images/placeholder.svg';">
+                                <label class="form-check-label mb-0 <%= eq.status !== 'active' ? 'text-muted' : '' %>" for="eq<%= eq.equipment_id %>">
+                                    <%= eq.equipment_name %>
+                                    <% if (eq.status !== 'active') { %>
+                                        <span class="badge bg-warning text-dark">🛠️ Maintenance</span>
+                                    <% } else { %>
+                                        <span class="text-muted small">(<%= eq.quantity_available %> available)</span>
+                                    <% } %>
+                                </label>
+                            </div>
+                        <% }); %>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Submit Booking Request</button>
+                    <div class="form-text">Room-only bookings are confirmed instantly. Adding equipment needs admin approval before it's confirmed.</div>
+                </form>
+            </div>
+        </div>
+        <% } %>
+    </div>
+    <script>
+        // Bookings can't be made for a past date/time — floor both
+        // pickers to "now" and keep it current while the page is open.
+        (function () {
+            function toLocalInputValue(date) {
+                const pad = (n) => String(n).padStart(2, '0');
+                return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+            }
+            function applyMin() {
+                const nowValue = toLocalInputValue(new Date());
+                document.getElementById('start_time').min = nowValue;
+                document.getElementById('end_time').min = nowValue;
+            }
+            applyMin();
+            setInterval(applyMin, 30000);
+        })();
+    </script>
+    <%- include('partials/footer') %>
+</body>
+</html>

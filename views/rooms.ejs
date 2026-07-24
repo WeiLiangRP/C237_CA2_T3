@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Browse Rooms - BookWise</title>
+    <%- include('partials/head-assets') %>
+</head>
+<body>
+    <%- include('partials/navbar') %>
+    <div class="container">
+        <h1 class="mt-5">Browse Rooms</h1>
+        <p class="text-muted mb-0">Pick a category to see only the rooms and equipment that belong to it.</p>
+
+        <nav class="cat-nav">
+            <a class="cat-tab all <%= !activeCategory ? 'active' : '' %>" href="/rooms">
+                <span class="cat-icon">🗂️</span> All
+            </a>
+            <% Object.keys(CATEGORIES).forEach(function(key) { %>
+                <a class="cat-tab <%= key %> <%= activeCategory === key ? 'active' : '' %>" href="/rooms?category=<%= key %>">
+                    <span class="cat-icon"><%= CATEGORIES[key].icon %></span> <%= CATEGORIES[key].label %>
+                </a>
+            <% }); %>
+        </nav>
+
+        <form method="GET" action="/rooms" class="row g-2 mt-3 mb-4">
+            <% if (activeCategory) { %><input type="hidden" name="category" value="<%= activeCategory %>"><% } %>
+            <div class="col-md-5">
+                <input type="text" name="q" class="form-control" placeholder="Search by name or location"
+                    value="<%= query.q || '' %>">
+            </div>
+            <div class="col-md-4">
+                <select name="sort" class="form-select">
+                    <option value="name" <%= query.sort === 'name' ? 'selected' : '' %>>Sort: Name</option>
+                    <option value="capacity_asc" <%= query.sort === 'capacity_asc' ? 'selected' : '' %>>Sort: Capacity (Low-High)</option>
+                    <option value="capacity_desc" <%= query.sort === 'capacity_desc' ? 'selected' : '' %>>Sort: Capacity (High-Low)</option>
+                    <option value="favourites" <%= query.sort === 'favourites' ? 'selected' : '' %>>Sort: Favourites first</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">Search</button>
+            </div>
+        </form>
+
+        <div class="row">
+            <% if (rooms.length === 0) { %>
+                <p class="text-muted">No rooms match your search<% if (activeCategory) { %> in <%= CATEGORIES[activeCategory].label %><% } %>.</p>
+            <% } %>
+            <% rooms.forEach(function(room) { %>
+                <div class="col-md-4 mb-4">
+                    <div class="card room-card h-100 cat-<%= room.category %>">
+                        <div class="facility-thumb">
+                            <img src="<%= room.image_url || '/images/placeholder.svg' %>" alt="<%= room.room_name %>"
+                                onerror="this.onerror=null;this.src='/images/placeholder.svg';">
+                            <% if (room.status === 'maintenance') { %>
+                                <span class="badge facility-status-badge bg-warning text-dark">🛠️ Maintenance</span>
+                            <% } %>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <span class="room-code">R-<%= String(room.room_id).padStart(3, '0') %></span>
+                                <button
+                                    class="btn btn-sm favourite-btn"
+                                    data-room-id="<%= room.room_id %>"
+                                    data-favourited="<%= room.is_favourite ? 'true' : 'false' %>">
+                                    <%= room.is_favourite ? '⭐' : '☆' %>
+                                </button>
+                            </div>
+                            <h5 class="card-title mt-1"><%= room.room_name %></h5>
+                            <% const category = room.category; %>
+                            <%- include('partials/category-badge', { category }) %>
+                            <p class="card-text small text-muted mt-2 mb-1"><%= room.location %></p>
+                            <p class="card-text"><%= room.description %></p>
+                            <p class="card-text">Capacity: <strong><%= room.capacity %></strong></p>
+                            <% if (room.upcoming_booking_count > 0) { %>
+                                <p class="card-text small text-muted mb-2">📅 <%= room.upcoming_booking_count %> upcoming booked slot<%= room.upcoming_booking_count === 1 ? '' : 's' %></p>
+                            <% } %>
+                            <% if (room.status === 'maintenance') { %>
+                                <button type="button" class="btn btn-secondary w-100" disabled>🛠️ Unavailable (Maintenance)</button>
+                            <% } else { %>
+                                <a href="/rooms/<%= room.room_id %>" class="btn btn-primary">View & Book</a>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
+    </div>
+
+    <script>
+        // Favourite Rooms — toggled instantly via Fetch API, no page reload.
+        document.querySelectorAll('.favourite-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const roomId = btn.dataset.roomId;
+                fetch(`/favourites/${roomId}/toggle`, { method: 'POST' })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            btn.dataset.favourited = data.favourited;
+                            btn.textContent = data.favourited ? '⭐' : '☆';
+                        }
+                    })
+                    .catch(err => console.error('Favourite toggle failed:', err));
+            });
+        });
+    </script>
+    <%- include('partials/footer') %>
+</body>
+</html>

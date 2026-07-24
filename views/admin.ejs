@@ -1,14 +1,63 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Admin Dashboard</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - BookWise</title>
+    <%- include('partials/head-assets') %>
 </head>
 <body>
+    <%- include('partials/navbar') %>
     <div class="container">
-        <h1 class="mt-5">Admin Dashboard</h1>
-        <p>Welcome, <%= user.username %> (<%= user.role %>)</p>
-        <a href="/logout" class="btn btn-primary">Logout</a>
+        <% if (announcements && announcements.length > 0) { %>
+            <h4 class="mt-5">📢 Announcements</h4>
+            <% announcements.forEach(function(a) { %>
+                <div class="alert alert-info">
+                    <strong><%= a.title %></strong> — <%= a.message %>
+                    <div class="small text-muted">Posted by <%= a.posted_by_name %> on <%= new Date(a.created_at).toLocaleDateString() %></div>
+                </div>
+            <% }); %>
+        <% } %>
+
+        <h1 class="<%= (announcements && announcements.length > 0) ? 'mt-4' : 'mt-5' %>">Admin Dashboard</h1>
+        <p class="text-muted">Welcome, <%= user.username %></p>
+
+        <div class="row mt-4">
+            <div class="col-md-4 mb-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h2><%= pendingCount %></h2>
+                        <p class="text-muted mb-0">Pending Approvals</p>
+                        <a href="/admin/bookings?status=pending" class="btn btn-sm btn-primary mt-2">Review</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h2><%= activeRooms %></h2>
+                        <p class="text-muted mb-0">Active Rooms</p>
+                        <a href="/admin/facilities" class="btn btn-sm btn-outline-primary mt-2">Manage</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h2><%= bookingsToday %></h2>
+                        <p class="text-muted mb-0">Bookings Today</p>
+                        <a href="/admin/analytics" class="btn btn-sm btn-outline-primary mt-2">View Analytics</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="list-group mt-4">
+            <a href="/admin/facilities" class="list-group-item list-group-item-action">🏫 Facilities — Rooms, Equipment & Categories</a>
+            <a href="/admin/bookings" class="list-group-item list-group-item-action">📋 Booking Approvals</a>
+            <a href="/admin/announcements" class="list-group-item list-group-item-action">📢 Announcements</a>
+            <a href="/admin/analytics" class="list-group-item list-group-item-action">📊 Analytics</a>
+        </div>
     </div>
+    <%- include('partials/footer') %>
 </body>
 </html>

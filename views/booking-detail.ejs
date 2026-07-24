@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Booking Details - BookWise</title>
+    <%- include('partials/head-assets') %>
+    <style>
+        .timeline { display: flex; list-style: none; padding: 0; margin: 2rem 0; }
+        .timeline li { flex: 1; text-align: center; position: relative; }
+        .timeline li:not(:last-child)::after {
+            content: ''; position: absolute; top: 12px; left: 50%; width: 100%; height: 3px; background: #dee2e6; z-index: 0;
+        }
+        .timeline .dot { width: 24px; height: 24px; border-radius: 50%; background: #dee2e6; margin: 0 auto; position: relative; z-index: 1; box-shadow: 0 0 0 4px #fff; }
+        .timeline .dot.done { background: #0F6E63; }
+        .timeline .dot.current { background: #FF6B45; }
+        .timeline .label { font-size: 0.8rem; margin-top: 8px; font-weight: 600; color: #4B5563; text-transform: capitalize; }
+    </style>
+</head>
+<body>
+    <%- include('partials/navbar') %>
+    <div class="container" style="max-width: 700px;">
+        <a href="/my-bookings" class="btn btn-link px-0 mt-4">&larr; Back to my bookings</a>
+        <img src="<%= booking.image_url || '/images/placeholder.svg' %>" alt="<%= booking.room_name || 'Room removed' %>" class="thumb-lg"
+            onerror="this.onerror=null;this.src='/images/placeholder.svg';">
+        <h1><%= booking.room_name || 'Room removed' %></h1>
+        <% const status = booking.status; %>
+        <p><%- include('partials/status-badge', { status }) %></p>
+
+        <%
+            // Booking Status Timeline: Pending -> Approved -> Checked In -> Completed
+            const steps = ['pending', 'approved', 'checked_in', 'completed'];
+            const isTerminatedEarly = ['cancelled', 'rejected', 'expired'].includes(booking.status);
+            const currentIndex = steps.indexOf(booking.status);
+        %>
+        <% if (!isTerminatedEarly) { %>
+            <ul class="timeline">
+                <% steps.forEach(function(step, i) { %>
+                    <li>
+                        <div class="dot <%= (i < currentIndex || (i === currentIndex && step === 'completed')) ? 'done' : (i === currentIndex ? 'current' : '') %>"></div>
+                        <div class="label"><%= step.replace('_', ' ') %></div>
+                    </li>
+                <% }); %>
+            </ul>
+        <% } else { %>
+            <div class="alert alert-secondary mt-3">This booking ended early: <strong><%= booking.status.replace('_',' ') %></strong></div>
+        <% } %>
+
+        <table class="table">
+            <tr><th>Purpose</th><td><%= booking.purpose || '-' %></td></tr>
+            <tr><th>Start</th><td><%= new Date(booking.start_time).toLocaleString() %></td></tr>
+            <tr><th>End</th><td><%= new Date(booking.end_time).toLocaleString() %></td></tr>
+            <tr><th>Location</th><td><%= booking.location || '-' %></td></tr>
+            <% if (booking.admin_remark) { %>
+                <tr><th>Admin Remark</th><td><%= booking.admin_remark %></td></tr>
+            <% } %>
+        </table>
+
+        <% if (equipmentUsed.length > 0) { %>
+            <h5>Equipment Reserved</h5>
+            <ul class="list-unstyled">
+                <% equipmentUsed.forEach(function(eq) { %>
+                    <li class="d-flex align-items-center gap-2 mb-2">
+                        <img src="<%= eq.image_url || '/images/placeholder.svg' %>" alt="<%= eq.equipment_name %>" class="thumb-xs"
+                            onerror="this.onerror=null;this.src='/images/placeholder.svg';">
+                        <%= eq.equipment_name %> (x<%= eq.quantity %>)
+                    </li>
+                <% }); %>
+            </ul>
+        <% } %>
+
+        <div class="mt-4">
+            <% if (typeof messages !== 'undefined' && messages.length > 0) { %>
+                <div class="alert alert-success">✅ <%= messages[0] %></div>
+            <% } %>
+            <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
+                <div class="alert alert-danger">⚠️ <%= errors[0] %></div>
+            <% } %>
+            <% if (booking.status === 'approved' && user.user_id === booking.user_id) { %>
+                <form action="/bookings/<%= booking.booking_id %>/checkin" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-success">Check In</button>
+                </form>
+            <% } %>
+            <% if (['approved','checked_in','completed'].includes(booking.status)) { %>
+                <a href="/bookings/<%= booking.booking_id %>/receipt" class="btn btn-outline-primary">View Receipt</a>
+            <% } %>
+        </div>
+    </div>
+    <%- include('partials/footer') %>
+</body>
+</html>

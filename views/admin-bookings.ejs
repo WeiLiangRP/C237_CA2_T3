@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Bookings - BookWise</title>
+    <%- include('partials/head-assets') %>
+</head>
+<body>
+    <%- include('partials/navbar') %>
+    <div class="container">
+        <h1 class="mt-5">Manage Bookings</h1>
+
+        <ul class="nav nav-tabs mt-3">
+            <li class="nav-item"><a class="nav-link <%= activeStatus === 'all' ? 'active' : '' %>" href="/admin/bookings">All</a></li>
+            <li class="nav-item"><a class="nav-link <%= activeStatus === 'pending' ? 'active' : '' %>" href="/admin/bookings?status=pending">Pending</a></li>
+            <li class="nav-item"><a class="nav-link <%= activeStatus === 'approved' ? 'active' : '' %>" href="/admin/bookings?status=approved">Approved</a></li>
+            <li class="nav-item"><a class="nav-link <%= activeStatus === 'checked_in' ? 'active' : '' %>" href="/admin/bookings?status=checked_in">Checked In</a></li>
+            <li class="nav-item"><a class="nav-link <%= activeStatus === 'completed' ? 'active' : '' %>" href="/admin/bookings?status=completed">Completed</a></li>
+            <li class="nav-item"><a class="nav-link <%= activeStatus === 'rejected' ? 'active' : '' %>" href="/admin/bookings?status=rejected">Rejected</a></li>
+        </ul>
+
+        <table class="table mt-4">
+            <thead>
+                <tr><th></th><th>Student</th><th>Room</th><th>Start</th><th>End</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+                <% if (bookings.length === 0) { %>
+                    <tr><td colspan="7" class="text-muted">No bookings found.</td></tr>
+                <% } %>
+                <% bookings.forEach(function(b) { %>
+                    <tr>
+                        <td><img src="<%= b.image_url || '/images/placeholder.svg' %>" alt="" class="thumb-sm"
+                                onerror="this.onerror=null;this.src='/images/placeholder.svg';"></td>
+                        <td><%= b.username %></td>
+                        <td><%= b.room_name || 'Room removed' %></td>
+                        <td><%= new Date(b.start_time).toLocaleString() %></td>
+                        <td><%= new Date(b.end_time).toLocaleString() %></td>
+                        <td><% const status = b.status; %><%- include('partials/status-badge', { status }) %></td>
+                        <td>
+                            <% if (b.status === 'pending') { %>
+                                <form action="/admin/bookings/<%= b.booking_id %>/approve" method="POST" class="d-inline">
+                                    <input type="text" name="remark" placeholder="Remark (optional)" class="form-control form-control-sm d-inline w-auto">
+                                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                </form>
+                                <form action="/admin/bookings/<%= b.booking_id %>/reject" method="POST" class="d-inline">
+                                    <input type="text" name="remark" placeholder="Reason (optional)" class="form-control form-control-sm d-inline w-auto">
+                                    <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                                </form>
+                            <% } %>
+                            <a href="/bookings/<%= b.booking_id %>" class="btn btn-sm btn-outline-secondary">View</a>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+    <%- include('partials/footer') %>
+</body>
+</html>

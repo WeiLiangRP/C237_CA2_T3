@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Booking - BookWise</title>
+    <%- include('partials/head-assets') %>
+</head>
+<body>
+    <%- include('partials/navbar') %>
+    <div class="container" style="max-width: 600px;">
+        <h1 class="mt-5">Edit Booking</h1>
+        <div class="d-flex align-items-center gap-3 mb-3">
+            <img src="<%= booking.image_url || '/images/placeholder.svg' %>" alt="<%= booking.room_name || 'Room removed' %>" class="thumb-sm"
+                onerror="this.onerror=null;this.src='/images/placeholder.svg';">
+            <span class="text-muted"><%= booking.room_name || 'Room removed' %></span>
+        </div>
+
+        <% if (errors && errors.length > 0) { %>
+            <div class="alert alert-danger">
+                <% errors.forEach(function(error) { %><p class="mb-0"><%= error %></p><% }); %>
+            </div>
+        <% } %>
+
+        <form action="/bookings/<%= booking.booking_id %>/edit" method="POST" class="mt-3">
+            <div class="mb-3">
+                <label class="form-label">Purpose</label>
+                <input type="text" name="purpose" class="form-control" value="<%= booking.purpose || '' %>">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Start Time</label>
+                <input type="datetime-local" id="start_time" name="start_time" class="form-control" required
+                    value="<%= new Date(booking.start_time).toISOString().slice(0,16) %>">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">End Time</label>
+                <input type="datetime-local" id="end_time" name="end_time" class="form-control" required
+                    value="<%= new Date(booking.end_time).toISOString().slice(0,16) %>">
+            </div>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <a href="/my-bookings" class="btn btn-outline-secondary">Cancel</a>
+        </form>
+    </div>
+    <script>
+        (function () {
+            function toLocalInputValue(date) {
+                const pad = (n) => String(n).padStart(2, '0');
+                return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+            }
+            const nowValue = toLocalInputValue(new Date());
+            document.getElementById('start_time').min = nowValue;
+            document.getElementById('end_time').min = nowValue;
+        })();
+    </script>
+    <%- include('partials/footer') %>
+</body>
+</html>

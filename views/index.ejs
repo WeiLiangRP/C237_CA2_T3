@@ -1,26 +1,84 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Home</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title>BookWise - Campus Study Space & Equipment Booking</title>
+    <%- include('partials/head-assets') %>
 </head>
-
 <body>
     <%- include('partials/navbar') %>
     <div class="container">
-        <h1 class="mt-5">Welcome to our website</h1>
-        <% if (messages && messages.length > 0) { %>
-            <div class="alert alert-success">
-                <% messages.forEach(function(message) { %>
-                    <p><%= message %></p>
-                <% }); %>
+        <div class="hero">
+            <span class="eyebrow">Campus Directory</span>
+            <h1>Find your room. Book it in seconds.</h1>
+            <p class="lead">Every space and every piece of kit on campus, sorted the way you'd find it on a
+                building directory — by what you're actually there to do.</p>
+            <% if (messages && messages.length > 0) { %>
+                <div class="alert alert-success mt-3 mb-0" style="max-width: 32rem;">
+                    <% messages.forEach(function(message) { %>
+                        <p class="mb-0"><%= message %></p>
+                    <% }); %>
+                </div>
+            <% } %>
+            <div class="mt-4">
+                <% if (user) { %>
+                    <a href="/dashboard" class="btn btn-primary btn-lg">Go to Dashboard</a>
+                <% } else { %>
+                    <a href="/register" class="btn btn-primary btn-lg">Register</a>
+                    <a href="/login" class="btn btn-outline-light btn-lg ms-2">Login</a>
+                <% } %>
             </div>
-            Hello , <%= user.username %>
-            <br> <a href="/logout" class="btn btn-primary mt-3">Logout</a>
-        <% } else { %>
-        <a href="/register" class="btn btn-primary mt-3">Register</a>
-        <a href="/login" class="btn btn-primary mt-3">Login</a>
+        </div>
+
+        <h4 class="mt-5 mb-0">Browse by category</h4>
+        <p class="text-muted">Jump straight to the rooms and equipment that belong together.</p>
+        <div class="directory-grid">
+            <% Object.keys(CATEGORIES).forEach(function(key) { %>
+                <a class="directory-card <%= key %>" href="<%= user ? ('/rooms?category=' + key) : '/login' %>">
+                    <span class="cat-icon-lg"><%= CATEGORIES[key].icon %></span>
+                    <h3><%= CATEGORIES[key].label %></h3>
+                    <p><%= CATEGORIES[key].tagline %></p>
+                </a>
+            <% }); %>
+        </div>
+
+        <div class="gallery-section">
+            <span class="eyebrow">Around Campus</span>
+            <h4 class="mb-0">Facilities</h4>
+            <p class="text-muted">A look at the spaces you can book.</p>
+
+            <div class="gallery-grid">
+                <% if (galleryRooms && galleryRooms.length > 0) { %>
+                    <% galleryRooms.forEach(function(room) { %>
+                        <div class="gallery-tile">
+                            <div class="gallery-media">
+                                <span class="gallery-tag">Facility</span>
+                                <img src="<%= room.image_url || '/images/placeholder.svg' %>" alt="<%= room.room_name %>" loading="lazy"
+                                    onerror="this.onerror=null;this.src='/images/placeholder.svg';">
+                            </div>
+                            <div class="gallery-body">
+                                <h4><%= room.room_name %></h4>
+                                <p><%= room.location %></p>
+                            </div>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <p class="text-muted">No facilities to show yet.</p>
+                <% } %>
+            </div>
+        </div>
+
+
+        <% if (announcements && announcements.length > 0) { %>
+            <h4 class="mt-5">📢 Campus Announcements</h4>
+            <% announcements.forEach(function(a) { %>
+                <div class="alert alert-info">
+                    <strong><%= a.title %></strong> — <%= a.message %>
+                    <div class="small text-muted">Posted by <%= a.posted_by_name %> on <%= new Date(a.created_at).toLocaleDateString() %></div>
+                </div>
+            <% }); %>
         <% } %>
     </div>
+    <%- include('partials/footer') %>
 </body>
 </html>

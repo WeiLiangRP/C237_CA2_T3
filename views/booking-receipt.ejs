@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Booking Receipt - BookWise</title>
+    <%- include('partials/head-assets') %>
+    <style>
+        @media print {
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print">
+        <%- include('partials/navbar') %>
+    </div>
+    <div class="container" style="max-width: 600px;">
+        <div class="card mt-4">
+            <div class="card-body">
+                <h3 class="card-title">BookWise Booking Confirmation</h3>
+                <hr>
+                <img src="<%= booking.image_url || '/images/placeholder.svg' %>" alt="<%= booking.room_name %>" class="thumb-lg" style="max-height: 160px;"
+                    onerror="this.onerror=null;this.src='/images/placeholder.svg';">
+                <table class="table table-borderless">
+                    <tr><th>Booking ID</th><td>#<%= booking.booking_id %></td></tr>
+                    <tr><th>Student</th><td><%= booking.username %></td></tr>
+                    <tr><th>Room</th><td><%= booking.room_name %></td></tr>
+                    <tr><th>Location</th><td><%= booking.location %></td></tr>
+                    <tr><th>Start</th><td><%= new Date(booking.start_time).toLocaleString() %></td></tr>
+                    <tr><th>End</th><td><%= new Date(booking.end_time).toLocaleString() %></td></tr>
+                    <tr><th>Purpose</th><td><%= booking.purpose || '-' %></td></tr>
+                    <tr><th>Status</th><td><% const status = booking.status; %><%- include('partials/status-badge', { status }) %></td></tr>
+                </table>
+                <% if (equipmentUsed && equipmentUsed.length > 0) { %>
+                    <h5>Equipment Reserved</h5>
+                    <ul class="list-unstyled">
+                        <% equipmentUsed.forEach(function(eq) { %>
+                            <li class="d-flex align-items-center gap-2 mb-2">
+                                <img src="<%= eq.image_url || '/images/placeholder.svg' %>" alt="<%= eq.equipment_name %>" class="thumb-xs"
+                                    onerror="this.onerror=null;this.src='/images/placeholder.svg';">
+                                <%= eq.equipment_name %> (x<%= eq.quantity %>)
+                            </li>
+                        <% }); %>
+                    </ul>
+                    <hr>
+                <% } %>
+                <p class="text-muted small">Please present this confirmation at check-in.</p>
+                <button class="btn btn-primary no-print" onclick="window.print()">Print Receipt</button>
+                <a href="/bookings/<%= booking.booking_id %>" class="btn btn-outline-secondary no-print">Back</a>
+            </div>
+        </div>
+    </div>
+    <%- include('partials/footer') %>
+</body>
+</html>

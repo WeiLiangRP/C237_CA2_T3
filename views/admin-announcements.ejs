@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Announcements - BookWise</title>
+    <%- include('partials/head-assets') %>
+</head>
+<body>
+    <%- include('partials/navbar') %>
+    <div class="container">
+        <h1 class="mt-5">Announcements</h1>
+        <% if (messages && messages.length > 0) { %>
+            <div class="alert alert-success"><% messages.forEach(function(m) { %><p class="mb-0"><%= m %></p><% }); %></div>
+        <% } %>
+
+        <div class="card mb-4">
+            <div class="card-header">Post New Announcement</div>
+            <div class="card-body">
+                <form action="/admin/announcements" method="POST">
+                    <div class="mb-3">
+                        <input type="text" name="title" class="form-control" placeholder="Title" required>
+                    </div>
+                    <div class="mb-3">
+                        <textarea name="message" class="form-control" rows="2" placeholder="Message" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Post</button>
+                </form>
+            </div>
+        </div>
+
+        <% announcements.forEach(function(a) { %>
+            <div class="card mb-2">
+                <div class="card-body d-flex justify-content-between align-items-start">
+                    <div>
+                        <h5 class="card-title"><%= a.title %></h5>
+                        <p class="card-text"><%= a.message %></p>
+                        <p class="small text-muted mb-0">By <%= a.username %> on <%= new Date(a.created_at).toLocaleDateString() %></p>
+                    </div>
+                    <form action="/admin/announcements/<%= a.announcement_id %>/delete" method="POST">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this announcement?')">Delete</button>
+                    </form>
+                </div>
+            </div>
+        <% }); %>
+    </div>
+    <%- include('partials/footer') %>
+</body>
+</html>

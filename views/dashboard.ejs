@@ -1,17 +1,122 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Dashboard</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title>My Dashboard - BookWise</title>
+    <%- include('partials/head-assets') %>
 </head>
 <body>
+    <%- include('partials/navbar') %>
     <div class="container">
-        <h1 class="mt-5">Dashboard</h1>
-        <p>Welcome, <%= user.username %> (<%= user.role %>)</p>
-        <% if (user.role === 'admin') { %>
-            <a href="/admin" class="btn btn-primary">Admin Dashboard</a>
+        <% if (announcements && announcements.length > 0) { %>
+            <h4 class="mt-5">📢 Announcements</h4>
+            <% announcements.forEach(function(a) { %>
+                <div class="alert alert-info">
+                    <strong><%= a.title %></strong> — <%= a.message %>
+                    <div class="small text-muted">Posted by <%= a.posted_by_name %> on <%= new Date(a.created_at).toLocaleDateString() %></div>
+                </div>
+            <% }); %>
         <% } %>
-        <a href="/logout" class="btn btn-primary">Logout</a>
+
+        <h1 class="<%= (announcements && announcements.length > 0) ? 'mt-4' : 'mt-5' %>">My Dashboard</h1>
+        <p class="text-muted">Welcome back, <%= user.username %>!</p>
+
+        <div class="row mt-4">
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">📅 Upcoming Bookings</div>
+                    <ul class="list-group list-group-flush">
+                        <% if (upcoming.length === 0) { %>
+                            <li class="list-group-item text-muted">No upcoming bookings.</li>
+                        <% } %>
+                        <% upcoming.forEach(function(b) { %>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center gap-2">
+                                    <img src="<%= b.image_url || '/images/placeholder.svg' %>" alt="" class="thumb-xs"
+                                        onerror="this.onerror=null;this.src='/images/placeholder.svg';">
+                                    <div>
+                                        <strong><%= b.room_name %></strong><br>
+                                        <span class="small text-muted"><%= new Date(b.start_time).toLocaleString() %></span>
+                                    </div>
+                                </div>
+                                <a href="/bookings/<%= b.booking_id %>" class="btn btn-sm btn-outline-primary">View</a>
+                            </li>
+                        <% }); %>
+                    </ul>
+                    <div class="card-footer"><a href="/rooms" class="btn btn-primary btn-sm">Book a Room</a></div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">⏳ Pending Approval</div>
+                    <ul class="list-group list-group-flush">
+                        <% if (pending.length === 0) { %>
+                            <li class="list-group-item text-muted">Nothing pending.</li>
+                        <% } %>
+                        <% pending.forEach(function(b) { %>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center gap-2">
+                                    <img src="<%= b.image_url || '/images/placeholder.svg' %>" alt="" class="thumb-xs"
+                                        onerror="this.onerror=null;this.src='/images/placeholder.svg';">
+                                    <div>
+                                        <strong><%= b.room_name %></strong><br>
+                                        <span class="small text-muted"><%= new Date(b.start_time).toLocaleString() %></span>
+                                    </div>
+                                </div>
+                                <a href="/bookings/<%= b.booking_id %>" class="btn btn-sm btn-outline-secondary">View</a>
+                            </li>
+                        <% }); %>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">⭐ Favourite Rooms</div>
+                    <ul class="list-group list-group-flush">
+                        <% if (favourites.length === 0) { %>
+                            <li class="list-group-item text-muted">No favourites yet.</li>
+                        <% } %>
+                        <% favourites.forEach(function(r) { %>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center gap-2">
+                                    <img src="<%= r.image_url || '/images/placeholder.svg' %>" alt="" class="thumb-xs"
+                                        onerror="this.onerror=null;this.src='/images/placeholder.svg';">
+                                    <%= r.room_name %>
+                                </div>
+                                <a href="/rooms/<%= r.room_id %>" class="btn btn-sm btn-outline-primary">Book</a>
+                            </li>
+                        <% }); %>
+                    </ul>
+                    <div class="card-footer"><a href="/rooms?sort=favourites" class="btn btn-sm btn-link">View all favourites</a></div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">🕘 Recently Used Rooms</div>
+                    <ul class="list-group list-group-flush">
+                        <% if (recent.length === 0) { %>
+                            <li class="list-group-item text-muted">No booking history yet.</li>
+                        <% } %>
+                        <% recent.forEach(function(r) { %>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center gap-2">
+                                    <img src="<%= r.image_url || '/images/placeholder.svg' %>" alt="" class="thumb-xs"
+                                        onerror="this.onerror=null;this.src='/images/placeholder.svg';">
+                                    <%= r.room_name %>
+                                </div>
+                                <form action="/bookings/<%= r.booking_id %>/duplicate" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-primary">Book Again</button>
+                                </form>
+                            </li>
+                        <% }); %>
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
+    <%- include('partials/footer') %>
 </body>
 </html>

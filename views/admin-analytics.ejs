@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Analytics - BookWise</title>
+    <%- include('partials/head-assets') %>
+</head>
+<body>
+    <%- include('partials/navbar') %>
+    <div class="container">
+        <h1 class="mt-5">Analytics</h1>
+
+        <div class="row mt-4">
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">Most Popular Equipment</div>
+                    <ul class="list-group list-group-flush">
+                        <% if (popularEquipment.length === 0) { %>
+                            <li class="list-group-item text-muted">No data yet.</li>
+                        <% } %>
+                        <% popularEquipment.forEach(function(e) { %>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <%= e.equipment_name %> <span class="badge bg-primary rounded-pill"><%= e.times_booked %></span>
+                            </li>
+                        <% }); %>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">Monthly Booking Statistics</div>
+                    <ul class="list-group list-group-flush">
+                        <% if (monthlyStats.length === 0) { %>
+                            <li class="list-group-item text-muted">No data yet.</li>
+                        <% } %>
+                        <% monthlyStats.forEach(function(m) { %>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <%= m.month %> <span class="badge bg-primary rounded-pill"><%= m.total_bookings %></span>
+                            </li>
+                        <% }); %>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">Peak Booking Hours</div>
+                    <ul class="list-group list-group-flush">
+                        <% if (peakHours.length === 0) { %>
+                            <li class="list-group-item text-muted">No data yet.</li>
+                        <% } %>
+                        <% peakHours.forEach(function(h) { %>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <%= h.hour_of_day %>:00 <span class="badge bg-primary rounded-pill"><%= h.total_bookings %></span>
+                            </li>
+                        <% }); %>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">Department with Highest Usage</div>
+                    <ul class="list-group list-group-flush">
+                        <% if (departmentUsage.length === 0) { %>
+                            <li class="list-group-item text-muted">No data yet.</li>
+                        <% } %>
+                        <% departmentUsage.forEach(function(d) { %>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <%= d.department %> <span class="badge bg-primary rounded-pill"><%= d.total_bookings %></span>
+                            </li>
+                        <% }); %>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <h2><%= approvalRate %><%= approvalRate !== 'N/A' ? '%' : '' %></h2>
+                        <p class="text-muted mb-0">Booking Approval Rate</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <%- include('partials/footer') %>
+</body>
+</html>

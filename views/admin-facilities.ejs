@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Facilities - BookWise</title>
+    <%- include('partials/head-assets') %>
+</head>
+<body>
+    <%- include('partials/navbar') %>
+    <div class="container">
+        <h1 class="mt-5">Manage Facilities</h1>
+        <p class="text-muted mb-0">Rooms, equipment and categories in one place — add, edit, delete and manage photos without hopping between pages.</p>
+
+        <% if (messages && messages.length > 0) { %>
+            <div class="alert alert-success mt-3"><% messages.forEach(function(m) { %><p class="mb-0"><%= m %></p><% }); %></div>
+        <% } %>
+        <% if (errors && errors.length > 0) { %>
+            <div class="alert alert-danger mt-3"><% errors.forEach(function(e) { %><p class="mb-0"><%= e %></p><% }); %></div>
+        <% } %>
+
+        <ul class="nav nav-tabs mt-4" id="facilityTabs">
+            <li class="nav-item">
+                <a class="nav-link <%= activeTab === 'rooms' ? 'active' : '' %>" href="/admin/facilities?tab=rooms">🏫 Rooms <span class="badge rounded-pill bg-secondary"><%= roomsTotal %></span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <%= activeTab === 'equipment' ? 'active' : '' %>" href="/admin/facilities?tab=equipment">🎒 Equipment <span class="badge rounded-pill bg-secondary"><%= equipmentTotal %></span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <%= activeTab === 'categories' ? 'active' : '' %>" href="/admin/facilities?tab=categories">🗂️ Categories <span class="badge rounded-pill bg-secondary"><%= categories.length %></span></a>
+            </li>
+        </ul>
+
+        <!-- ============================================================
+             ROOMS TAB
+             ============================================================ -->
+        <div class="tab-pane-section <%= activeTab === 'rooms' ? '' : 'd-none' %>">
+            <div class="card mb-4 mt-4">
+                <div class="card-header">Add New Room</div>
+                <div class="card-body">
+                    <form action="/admin/rooms" method="POST" enctype="multipart/form-data" class="row g-2">
+                        <div class="col-md-3"><input type="text" name="room_name" class="form-control" placeholder="Room name" required></div>
+                        <div class="col-md-2"><input type="text" name="location" class="form-control" placeholder="Location" required></div>
+                        <div class="col-md-2"><input type="number" name="capacity" class="form-control" placeholder="Capacity" min="1" step="1" required></div>
+                        <div class="col-md-2">
+                            <select name="category" class="form-select" required>
+                                <% Object.keys(CATEGORIES).forEach(function(key) { %>
+                                    <option value="<%= key %>"><%= CATEGORIES[key].icon %> <%= CATEGORIES[key].label %></option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        <div class="col-md-3"><input type="text" name="description" class="form-control" placeholder="Description"></div>
+                        <div class="col-md-9">
+                            <label class="form-label small mb-1">Photo (optional)</label>
+                            <input type="file" name="image" class="form-control" accept="image/png,image/jpeg,image/webp,image/gif">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end"><button type="submit" class="btn btn-primary w-100">Add Room</button></div>
+                    </form>
+                </div>
+            </div>
+
+            <form method="GET" action="/admin/facilities" class="row g-2 mt-3 mb-4">
+                <input type="hidden" name="tab" value="rooms">
+                <div class="col-md-4">
+                    <input type="text" name="room_q" class="form-control" placeholder="Search by name or location"
+                        value="<%= query.room_q || '' %>">
+                </div>
+                <div class="col-md-3">
+                    <select name="room_category" class="form-select">
+                        <option value="">All categories</option>
+                        <% Object.keys(CATEGORIES).forEach(function(key) { %>
+                            <option value="<%= key %>" <%= query.room_category === key ? 'selected' : '' %>><%= CATEGORIES[key].icon %> <%= CATEGORIES[key].label %></option>
+                        <% }); %>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="room_status" class="form-select">
+                        <option value="">All statuses</option>
+                        <option value="active" <%= query.room_status === 'active' ? 'selected' : '' %>>Active</option>
+                        <option value="maintenance" <%= query.room_status === 'maintenance' ? 'selected' : '' %>>Maintenance</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="room_sort" class="form-select">
+                        <option value="name" <%= query.room_sort === 'name' ? 'selected' : '' %>>Sort: Name</option>
+                        <option value="capacity_asc" <%= query.room_sort === 'capacity_asc' ? 'selected' : '' %>>Capacity (Low-High)</option>
+                        <option value="capacity_desc" <%= query.room_sort === 'capacity_desc' ? 'selected' : '' %>>Capacity (High-Low)</option>
+                        <option value="newest" <%= query.room_sort === 'newest' ? 'selected' : '' %>>Newest first</option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-primary w-100">Go</button>
+                </div>
+            </form>
+
+            <div class="row">
+                <% if (rooms.length === 0) { %>
+                    <p class="text-muted"><%= (query.room_q || query.room_category || query.room_status) ? 'No rooms match your search/filters.' : 'No rooms yet — add one above.' %></p>
+                <% } %>
+                <% rooms.forEach(function(room) { %>
+                    <div class="col-md-4 mb-4">
+                        <div class="card facility-card h-100">
+                            <div class="facility-thumb">
+                                <img src="<%= room.image_url || '/images/placeholder.svg' %>" alt="<%= room.room_name %>"
+                                    onerror="this.onerror=null;this.src='/images/placeholder.svg';">
+                                <span class="badge facility-status-badge <%= room.status === 'active' ? 'bg-success' : 'bg-warning text-dark' %>"><%= room.status %></span>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <h5 class="card-title mb-1"><%= room.room_name %></h5>
+                                    <span class="room-code">R-<%= String(room.room_id).padStart(3, '0') %></span>
+                                </div>
+                                <% const category = room.category; %>
+                                <%- include('partials/category-badge', { category }) %>
+                                <p class="card-text small text-muted mt-2 mb-1"><%= room.location %> &middot; Capacity <%= room.capacity %></p>
+                                <% if (room.upcoming_booking_count > 0) { %>
+                                    <p class="card-text small mb-1">📅 <span class="badge bg-primary"><%= room.upcoming_booking_count %> booked slot<%= room.upcoming_booking_count === 1 ? '' : 's' %></span></p>
+                                <% } %>
+                                <p class="card-text small text-truncate-2"><%= room.description || 'No description.' %></p>
+                            </div>
+                            <div class="card-footer bg-transparent d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editRoom<%= room.room_id %>">Edit</button>
+                                <form action="/admin/rooms/<%= room.room_id %>/toggle-maintenance" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-warning">
+                                        <%= room.status === 'active' ? 'Set Maintenance' : 'Set Active' %>
+                                    </button>
+                                </form>
+                                <form action="/admin/rooms/<%= room.room_id %>/delete" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this room?')">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             EQUIPMENT TAB
+             ============================================================ -->
+        <div class="tab-pane-section <%= activeTab === 'equipment' ? '' : 'd-none' %>">
+            <div class="card mb-4 mt-4">
+                <div class="card-header">Add New Equipment</div>
+                <div class="card-body">
+                    <form action="/admin/equipment" method="POST" enctype="multipart/form-data" class="row g-2">
+                        <div class="col-md-3"><input type="text" name="equipment_name" class="form-control" placeholder="Equipment name" required></div>
+                        <div class="col-md-2">
+                            <select name="category" class="form-select" required>
+                                <% Object.keys(CATEGORIES).forEach(function(key) { %>
+                                    <option value="<%= key %>"><%= CATEGORIES[key].icon %> <%= CATEGORIES[key].label %></option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        <div class="col-md-3"><input type="text" name="description" class="form-control" placeholder="Description"></div>
+                        <div class="col-md-2"><input type="number" name="quantity_available" class="form-control" placeholder="Quantity" required></div>
+                        <div class="col-md-9">
+                            <label class="form-label small mb-1">Photo (optional)</label>
+                            <input type="file" name="image" class="form-control" accept="image/png,image/jpeg,image/webp,image/gif">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end"><button type="submit" class="btn btn-primary w-100">Add Equipment</button></div>
+                    </form>
+                </div>
+            </div>
+
+            <form method="GET" action="/admin/facilities" class="row g-2 mt-3 mb-4">
+                <input type="hidden" name="tab" value="equipment">
+                <div class="col-md-4">
+                    <input type="text" name="eq_q" class="form-control" placeholder="Search by name or description"
+                        value="<%= query.eq_q || '' %>">
+                </div>
+                <div class="col-md-3">
+                    <select name="eq_category" class="form-select">
+                        <option value="">All categories</option>
+                        <% Object.keys(CATEGORIES).forEach(function(key) { %>
+                            <option value="<%= key %>" <%= query.eq_category === key ? 'selected' : '' %>><%= CATEGORIES[key].icon %> <%= CATEGORIES[key].label %></option>
+                        <% }); %>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="eq_status" class="form-select">
+                        <option value="">All statuses</option>
+                        <option value="active" <%= query.eq_status === 'active' ? 'selected' : '' %>>Active</option>
+                        <option value="maintenance" <%= query.eq_status === 'maintenance' ? 'selected' : '' %>>Maintenance</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="eq_sort" class="form-select">
+                        <option value="name" <%= query.eq_sort === 'name' ? 'selected' : '' %>>Sort: Name</option>
+                        <option value="quantity_asc" <%= query.eq_sort === 'quantity_asc' ? 'selected' : '' %>>Quantity (Low-High)</option>
+                        <option value="quantity_desc" <%= query.eq_sort === 'quantity_desc' ? 'selected' : '' %>>Quantity (High-Low)</option>
+                        <option value="newest" <%= query.eq_sort === 'newest' ? 'selected' : '' %>>Newest first</option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-primary w-100">Go</button>
+                </div>
+            </form>
+
+            <div class="row">
+                <% if (equipment.length === 0) { %>
+                    <p class="text-muted"><%= (query.eq_q || query.eq_category || query.eq_status) ? 'No equipment matches your search/filters.' : 'No equipment yet — add one above.' %></p>
+                <% } %>
+                <% equipment.forEach(function(eq) { %>
+                    <div class="col-md-4 mb-4">
+                        <div class="card facility-card h-100">
+                            <div class="facility-thumb">
+                                <img src="<%= eq.image_url || '/images/placeholder.svg' %>" alt="<%= eq.equipment_name %>"
+                                    onerror="this.onerror=null;this.src='/images/placeholder.svg';">
+                                <span class="badge facility-status-badge <%= eq.status === 'active' ? 'bg-success' : 'bg-warning text-dark' %>"><%= eq.status %></span>
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title mb-1"><%= eq.equipment_name %></h5>
+                                <% const category = eq.category; %>
+                                <%- include('partials/category-badge', { category }) %>
+                                <p class="card-text small text-muted mt-2 mb-1">Available: <strong><%= eq.quantity_available %></strong></p>
+                                <p class="card-text small text-truncate-2"><%= eq.description || 'No description.' %></p>
+                            </div>
+                            <div class="card-footer bg-transparent d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editEquip<%= eq.equipment_id %>">Edit</button>
+                                <form action="/admin/equipment/<%= eq.equipment_id %>/toggle-maintenance" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-warning">
+                                        <%= eq.status === 'active' ? 'Set Maintenance' : 'Set Active' %>
+                                    </button>
+                                </form>
+                                <form action="/admin/equipment/<%= eq.equipment_id %>/delete" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this equipment?')">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             CATEGORIES TAB
+             ============================================================ -->
+        <div class="tab-pane-section <%= activeTab === 'categories' ? '' : 'd-none' %>">
+            <p class="text-muted mt-4 mb-0">Categories group rooms and equipment together on the Browse Rooms page. Create your own — you're not limited to the starter set.</p>
+
+            <div class="card mb-4 mt-3">
+                <div class="card-header">Add New Category</div>
+                <div class="card-body">
+                    <form id="addCategoryForm" action="/admin/categories" method="POST" class="row g-2">
+                        <div class="col-md-2">
+                            <input type="text" name="icon" class="form-control" placeholder="Icon (e.g. 🎨)" maxlength="10">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" name="label" class="form-control" placeholder="Display name (e.g. Music Rooms)" required>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" name="slug" class="form-control" placeholder="Key (e.g. music_rooms)" required pattern="[a-z0-9_]{2,30}">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" name="description" class="form-control" placeholder="Short tagline (optional)">
+                        </div>
+                        <div class="col-md-1"><button type="submit" class="btn btn-primary w-100">Add</button></div>
+                    </form>
+                    <div class="form-text mt-2">The key is used internally — lowercase letters, numbers and underscores only, and can't be changed later.</div>
+                </div>
+            </div>
+
+            <script>
+                // Submit the "Add New Category" form in the background instead of
+                // doing a full page redirect. Show the result as a popup (alert box),
+                // then refresh the categories tab so the new row/count shows up.
+                document.getElementById('addCategoryForm').addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    const form = e.target;
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    submitBtn.disabled = true;
+
+                    fetch(form.action, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: new URLSearchParams(new FormData(form))
+                    })
+                        .then(function (res) { return res.json(); })
+                        .then(function (data) {
+                            alert(data.message);
+                            if (data.success) {
+                                window.location.href = '/admin/facilities?tab=categories';
+                            } else {
+                                submitBtn.disabled = false;
+                            }
+                        })
+                        .catch(function () {
+                            alert('Something went wrong adding the category. Please try again.');
+                            submitBtn.disabled = false;
+                        });
+                });
+            </script>
+
+            <table class="table">
+                <thead>
+                    <tr><th>Category</th><th>Key</th><th>Tagline</th><th>Rooms</th><th>Equipment</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    <% if (categories.length === 0) { %>
+                        <tr><td colspan="6" class="text-muted">No categories yet — add one above.</td></tr>
+                    <% } %>
+                    <% categories.forEach(function(c) { %>
+                        <tr>
+                            <td><span class="cat-badge cat-<%= c.slug %>"><%= c.icon %> <%= c.label %></span></td>
+                            <td class="room-code"><%= c.slug %></td>
+                            <td class="small text-muted"><%= c.description || '-' %></td>
+                            <td><%= c.room_count %></td>
+                            <td><%= c.equipment_count %></td>
+                            <td class="text-nowrap">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editCat<%= c.slug %>">Edit</button>
+                                <form action="/admin/categories/<%= c.slug %>/delete" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                        onclick="return confirm('Delete the &quot;<%= c.label %>&quot; category?')"
+                                        <%= (c.room_count > 0 || c.equipment_count > 0) ? 'disabled title="Reassign rooms/equipment before deleting"' : '' %>>
+                                        Delete
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         EDIT MODALS — Rooms
+         ============================================================ -->
+    <% rooms.forEach(function(room) { %>
+        <div class="modal fade" id="editRoom<%= room.room_id %>" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form action="/admin/rooms/<%= room.room_id %>/edit" method="POST" enctype="multipart/form-data">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Edit <%= room.room_name %></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3 text-center">
+                                <img src="<%= room.image_url || '/images/placeholder.svg' %>" alt="<%= room.room_name %>"
+                                    class="modal-current-thumb" onerror="this.onerror=null;this.src='/images/placeholder.svg';">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Room name</label>
+                                <input type="text" name="room_name" class="form-control" value="<%= room.room_name %>" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Category</label>
+                                <select name="category" class="form-select" required>
+                                    <% Object.keys(CATEGORIES).forEach(function(key) { %>
+                                        <option value="<%= key %>" <%= room.category === key ? 'selected' : '' %>><%= CATEGORIES[key].icon %> <%= CATEGORIES[key].label %></option>
+                                    <% }); %>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Location</label>
+                                <input type="text" name="location" class="form-control" value="<%= room.location %>" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Capacity</label>
+                                <input type="number" name="capacity" class="form-control" value="<%= room.capacity %>" min="1" step="1" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea name="description" class="form-control" rows="2"><%= room.description || '' %></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Replace photo</label>
+                                <input type="file" name="image" class="form-control" accept="image/png,image/jpeg,image/webp,image/gif">
+                                <div class="form-text">Leave blank to keep the current photo.</div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    <% }); %>
+
+    <!-- ============================================================
+         EDIT MODALS — Equipment
+         ============================================================ -->
+    <% equipment.forEach(function(eq) { %>
+        <div class="modal fade" id="editEquip<%= eq.equipment_id %>" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form action="/admin/equipment/<%= eq.equipment_id %>/edit" method="POST" enctype="multipart/form-data">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Edit <%= eq.equipment_name %></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3 text-center">
+                                <img src="<%= eq.image_url || '/images/placeholder.svg' %>" alt="<%= eq.equipment_name %>"
+                                    class="modal-current-thumb" onerror="this.onerror=null;this.src='/images/placeholder.svg';">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Equipment name</label>
+                                <input type="text" name="equipment_name" class="form-control" value="<%= eq.equipment_name %>" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Category</label>
+                                <select name="category" class="form-select" required>
+                                    <% Object.keys(CATEGORIES).forEach(function(key) { %>
+                                        <option value="<%= key %>" <%= eq.category === key ? 'selected' : '' %>><%= CATEGORIES[key].icon %> <%= CATEGORIES[key].label %></option>
+                                    <% }); %>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea name="description" class="form-control" rows="2"><%= eq.description || '' %></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Quantity available</label>
+                                <input type="number" name="quantity_available" class="form-control" value="<%= eq.quantity_available %>" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Replace photo</label>
+                                <input type="file" name="image" class="form-control" accept="image/png,image/jpeg,image/webp,image/gif">
+                                <div class="form-text">Leave blank to keep the current photo.</div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    <% }); %>
+
+    <!-- ============================================================
+         EDIT MODALS — Categories
+         ============================================================ -->
+    <% categories.forEach(function(c) { %>
+        <div class="modal fade" id="editCat<%= c.slug %>" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form action="/admin/categories/<%= c.slug %>/edit" method="POST">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Edit <%= c.label %></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Key</label>
+                                <input type="text" class="form-control" value="<%= c.slug %>" disabled>
+                                <div class="form-text">Keys can't be changed once created.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Icon</label>
+                                <input type="text" name="icon" class="form-control" value="<%= c.icon %>" maxlength="10">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Display name</label>
+                                <input type="text" name="label" class="form-control" value="<%= c.label %>" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Tagline</label>
+                                <input type="text" name="description" class="form-control" value="<%= c.description || '' %>">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    <% }); %>
+    <%- include('partials/footer') %>
+</body>
+</html>

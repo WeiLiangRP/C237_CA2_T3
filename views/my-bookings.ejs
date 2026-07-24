@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Bookings - BookWise</title>
+    <%- include('partials/head-assets') %>
+</head>
+<body>
+    <%- include('partials/navbar') %>
+    <div class="container">
+        <h1 class="mt-5">My Bookings</h1>
+
+        <ul class="nav nav-tabs mt-3">
+            <li class="nav-item"><a class="nav-link <%= activeStatus === 'all' ? 'active' : '' %>" href="/my-bookings">All</a></li>
+            <li class="nav-item"><a class="nav-link <%= activeStatus === 'upcoming' ? 'active' : '' %>" href="/my-bookings?status=upcoming">Upcoming</a></li>
+            <li class="nav-item"><a class="nav-link <%= activeStatus === 'completed' ? 'active' : '' %>" href="/my-bookings?status=completed">Completed</a></li>
+            <li class="nav-item"><a class="nav-link <%= activeStatus === 'cancelled' ? 'active' : '' %>" href="/my-bookings?status=cancelled">Cancelled / No-show</a></li>
+        </ul>
+
+        <table class="table mt-4">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Room</th>
+                    <th>Start</th>
+                    <th>End</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (bookings.length === 0) { %>
+                    <tr><td colspan="6" class="text-muted">No bookings found.</td></tr>
+                <% } %>
+                <% bookings.forEach(function(b) { %>
+                    <tr>
+                        <td><img src="<%= b.image_url || '/images/placeholder.svg' %>" alt="" class="thumb-sm"
+                                onerror="this.onerror=null;this.src='/images/placeholder.svg';"></td>
+                        <td><%= b.room_name || 'Room removed' %></td>
+                        <td><%= new Date(b.start_time).toLocaleString() %></td>
+                        <td><%= new Date(b.end_time).toLocaleString() %></td>
+                        <td><% const status = b.status; %><%- include('partials/status-badge', { status }) %></td>
+                        <td>
+                            <a href="/bookings/<%= b.booking_id %>" class="btn btn-sm btn-outline-primary">View</a>
+                            <% if (b.status === 'pending') { %>
+                                <a href="/bookings/<%= b.booking_id %>/edit" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                <form action="/bookings/<%= b.booking_id %>/cancel" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Cancel this booking?')">Cancel</button>
+                                </form>
+                            <% } %>
+                            <% if (b.status === 'approved') { %>
+                                <form action="/bookings/<%= b.booking_id %>/cancel" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Cancel this booking?')">Cancel</button>
+                                </form>
+                            <% } %>
+                            <% if (['completed','cancelled','rejected','expired'].includes(b.status)) { %>
+                                <form action="/bookings/<%= b.booking_id %>/duplicate" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-primary">Book Again</button>
+                                </form>
+                            <% } %>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+    <%- include('partials/footer') %>
+</body>
+</html>
