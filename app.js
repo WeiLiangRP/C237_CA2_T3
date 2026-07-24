@@ -203,6 +203,7 @@ function fetchEquipmentForBooking(bookingId, callback) {
 
 // ============================================================
 // Home
+//developer: tanesh raj (25044865)
 // ============================================================
 app.get('/', (req, res) => {
     const announcementSql = `SELECT a.*, u.username AS posted_by_name
@@ -301,6 +302,7 @@ app.post('/register', validateRegistration, (req, res) => {
 
 // ============================================================
 // Login
+// Developer: Chua Jia Qi (25044431)
 // ============================================================
 app.get('/login', (req, res) => {
     res.render('login', {
@@ -354,6 +356,7 @@ app.get('/logout', (req, res) => {
 
 // ============================================================
 // Forgot Password
+// Developer: Chua Jia Qi (25044431)
 // ============================================================
 app.get('/forgot-password', (req, res) => {
     res.render('forgot-password', {
@@ -475,6 +478,7 @@ app.get('/dashboard', checkAuthenticated, (req, res) => {
 
 // ============================================================
 // Browse Rooms — Search, Filter, Sort
+//Developer: Yong Wei Liang (24049245)
 // ============================================================
 app.get('/rooms', checkAuthenticated, (req, res) => {
     const { q, location, sort, category } = req.query;
@@ -567,6 +571,7 @@ app.get('/rooms/:id', checkAuthenticated, (req, res) => {
 
 // ============================================================
 // Favourites (Fetch API target — returns JSON, no page reload)
+// Developer: Tanesh Raj (25044865)
 // ============================================================
 app.post('/favourites/:roomId/toggle', checkAuthenticated, (req, res) => {
     const userId = req.session.user.user_id;
@@ -593,6 +598,7 @@ app.post('/favourites/:roomId/toggle', checkAuthenticated, (req, res) => {
 
 // ============================================================
 // Booking Creation — with Conflict Detection
+// Developer: Teo Ting Rui Damian (25045793)
 // ============================================================
 app.post('/bookings', checkAuthenticated, (req, res) => {
     const userId = req.session.user.user_id;
@@ -706,6 +712,7 @@ app.post('/bookings', checkAuthenticated, (req, res) => {
 
 // ============================================================
 // Duplicate Booking — "Book Again"
+// Developer: Teo Ting Rui Damian (25045793)
 // ============================================================
 app.post('/bookings/:id/duplicate', checkAuthenticated, (req, res) => {
     const userId = req.session.user.user_id;
@@ -750,6 +757,7 @@ app.post('/bookings/:id/duplicate', checkAuthenticated, (req, res) => {
 
 // ============================================================
 // Booking History ("My Bookings") — Filter by status
+//developer: yong wei liang (24049245)
 // ============================================================
 app.get('/my-bookings', checkAuthenticated, (req, res) => {
     syncBookingStatuses((syncErr) => {
@@ -787,6 +795,7 @@ app.get('/my-bookings', checkAuthenticated, (req, res) => {
 
 // ============================================================
 // Booking Detail (includes status timeline)
+// Developer: Wee Bao Weng (25046948)
 // ============================================================
 app.get('/bookings/:id', checkAuthenticated, (req, res) => {
     fetchBookingById(req.params.id, (booking) => {
@@ -815,6 +824,7 @@ app.get('/bookings/:id', checkAuthenticated, (req, res) => {
 
 // ============================================================
 // Booking Management — Edit / Cancel / Check-in / Approve
+// Developer: Wee Bao Weng (25046948)
 // ============================================================
 
 // Only pending bookings may be edited by the student who owns them.
@@ -963,6 +973,7 @@ app.get('/bookings/:id/receipt', checkAuthenticated, (req, res) => {
 // ADMIN — Category Management
 // Categories are no longer a fixed list — admins can create, rename,
 // and delete their own facility groupings here.
+// Developer: Ally Zhong (25005860)
 // ============================================================
 function isValidSlug(slug) {
     return /^[a-z0-9_]{2,30}$/.test(slug || '');
@@ -1044,6 +1055,7 @@ app.post('/admin/categories/:slug/delete', checkAuthenticated, checkAdmin, (req,
 
 // ============================================================
 // ADMIN — Room Management
+// Developer: Ally Zhong (25005860)
 // ============================================================
 app.get('/admin', checkAuthenticated, checkAdmin, (req, res) => {
     syncBookingStatuses((syncErr) => {
@@ -1299,6 +1311,7 @@ app.post('/admin/rooms/:id/delete', checkAuthenticated, checkAdmin, (req, res) =
 // ADMIN — Equipment Management
 // (managed from the Equipment tab on /admin/facilities; there is
 // no separate /admin/equipment page)
+// Developer: Wee Bao Weng (25046948)
 // ============================================================
 app.post('/admin/equipment', checkAuthenticated, checkAdmin, uploadEquipmentImage.single('image'), (req, res) => {
     const { equipment_name, description, quantity_available, category } = req.body;
@@ -1364,6 +1377,7 @@ app.post('/admin/equipment/:id/delete', checkAuthenticated, checkAdmin, (req, re
 
 // ============================================================
 // ADMIN — Booking Approval Workflow
+// Developer: Wee Bao Weng (25046948)
 // ============================================================
 app.get('/admin/bookings', checkAuthenticated, checkAdmin, (req, res) => {
     syncBookingStatuses((syncErr) => {
@@ -1445,6 +1459,7 @@ app.post('/admin/announcements/:id/delete', checkAuthenticated, checkAdmin, (req
 
 // ============================================================
 // ADMIN — Analytics
+// Developer: Yong Wei Liang (24049245)
 // ============================================================
 app.get('/admin/analytics', checkAuthenticated, checkAdmin, (req, res) => {
     const popularEquipmentSql = `
