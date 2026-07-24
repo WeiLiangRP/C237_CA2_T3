@@ -1,0 +1,5 @@
+<%
+    // Expects `category` variable in scope, and CATEGORIES (available globally via res.locals)
+    const __cat = CATEGORIES[category] || { label: category, icon: '' };
+%>
+<span class="cat-badge cat-<%= category %>"><%= __cat.icon %> <%= __cat.label %></span>

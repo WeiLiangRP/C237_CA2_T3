@@ -1,0 +1,18 @@
+<%
+    // Expects `status` variable to be in scope
+    const badgeMap = {
+        pending: 'bg-warning text-dark',
+        approved: 'bg-primary',
+        checked_in: 'bg-info text-dark',
+        completed: 'bg-success',
+        cancelled: 'bg-secondary',
+        rejected: 'bg-danger',
+        expired: 'bg-secondary'
+    };
+    const labelMap = {
+        rejected: 'Rejected'
+    };
+    const badgeClass = badgeMap[status] || 'bg-secondary';
+    const label = labelMap[status] || status.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase());
+%>
+<span class="badge <%= badgeClass %>"><%= label %></span>
